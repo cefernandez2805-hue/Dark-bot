@@ -34,7 +34,8 @@ async def on_ready():
 
 @bot.event
 async def on_member_ban(guild, user):
-    canal = bot.get_channel(ID_CANAL_BANEADOS)
+    canal = await bot.fetch_channel(ID_CANAL_BANEADOS)
+
     if not canal:
         return
 
