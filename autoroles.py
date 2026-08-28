@@ -37,7 +37,7 @@ class AutoRoles(commands.Cog):
         embed = discord.Embed(
             title="👑 │ ¡ELIGE TU PAÍS!",
             description=(
-                "🇨🇴 │ **REACCIONA A ESTE MENSAJE CON LA BANDERA DE TU PAÍS**\n\n"
+                "🇳🇮 │ **REACCIONA A ESTE MENSAJE CON LA BANDERA DE TU PAÍS**\n\n"
                 "1. **Solo se puede seleccionar un país.**\n"
                 "2. **Si te equivocas** y tienes que cambiar de país: primero **quita la reacción** y luego **vuelve a seleccionar**.\n"
                 "3. Evita usar todos los emojis y así evitas bugs. Y listo, **disfruta del server con tu nuevo rol.** 👑"
