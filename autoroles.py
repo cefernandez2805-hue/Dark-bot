@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 
-# Diccionario adaptado a los nombres con bandera de tu servidor
 FLAGS = {
     "🇨🇴": "Colombia 🇨🇴",
     "🇲🇽": "México 🇲🇽",
@@ -65,7 +64,7 @@ class AutoRoles(commands.Cog):
             role = discord.utils.get(guild.roles, name=role_name)
 
             if role:
-                member = payload.member
+                member = payload.member or await guild.fetch_member(payload.user_id)
                 if member:
                     await member.add_roles(role)
 
@@ -84,7 +83,7 @@ class AutoRoles(commands.Cog):
             role = discord.utils.get(guild.roles, name=role_name)
 
             if role:
-                member = guild.get_member(payload.user_id)
+                member = await guild.fetch_member(payload.user_id)
                 if member:
                     await member.remove_roles(role)
 
