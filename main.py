@@ -1,4 +1,5 @@
 import os
+import asyncio
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import discord
@@ -23,6 +24,7 @@ threading.Thread(target=start_web_server, daemon=True).start()
 intents = discord.Intents.default()
 intents.members = True
 intents.bans = True
+intents.reactions = True  # Necesario para los autoroles por reacción
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
@@ -35,7 +37,7 @@ async def on_ready():
 @bot.event
 async def on_member_ban(guild, user):
     canal = await bot.fetch_channel(ID_CANAL_BANEADOS)
-
+    
     if not canal:
         return
 
@@ -49,7 +51,7 @@ async def on_member_ban(guild, user):
         embed.set_thumbnail(url=user.avatar.url)
 
     embed.add_field(name="👤 Usuario", value=f"<@{user.id}>\n({user.name})", inline=False)
-    embed.add_field(name="🆔 ID", value=f"`{user.id}`", inline=False)
+    embed.add_field(name="🆔 ID", value=f"{user.id}", inline=False)
     embed.add_field(name="📅 Cuenta creada", value=f"<t:{int(user.created_at.timestamp())}:R>", inline=False)
 
     embed.set_footer(text="Dark", icon_url=guild.icon.url if guild.icon else None)
@@ -57,5 +59,11 @@ async def on_member_ban(guild, user):
 
     await canal.send(embed=embed)
 
-TOKEN = os.getenv("DISCORD_TOKEN")
-bot.run(TOKEN)
+async def main():
+    async with bot:
+        await bot.load_extension("autoroles")
+        await bot.start(os.environ.get("DISCORD_TOKEN"))
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
