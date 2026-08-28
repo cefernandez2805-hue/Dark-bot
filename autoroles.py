@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-# Diccionario mapeando la bandera exacta con el nombre del rol a asignar
+# Diccionario mapeando banderas con los nombres exactos de los roles
 FLAGS = {
     "🇨🇴": "Colombia",
     "🇲🇽": "México",
@@ -37,7 +37,7 @@ class AutoRoles(commands.Cog):
         embed = discord.Embed(
             title="👑 │ ¡ELIGE TU PAÍS!",
             description=(
-                "🇳🇮 │ **REACCIONA A ESTE MENSAJE CON LA BANDERA DE TU PAÍS**\n\n"
+                "🇨🇴 │ **REACCIONA A ESTE MENSAJE CON LA BANDERA DE TU PAÍS**\n\n"
                 "1. **Solo se puede seleccionar un país.**\n"
                 "2. **Si te equivocas** y tienes que cambiar de país: primero **quita la reacción** y luego **vuelve a seleccionar**.\n"
                 "3. Evita usar todos los emojis y así evitas bugs. Y listo, **disfruta del server con tu nuevo rol.** 👑"
@@ -58,21 +58,27 @@ class AutoRoles(commands.Cog):
         if payload.user_id == self.bot.user_id:
             return
 
-        emoji = str(payload.emoji)
-        if emoji in FLAGS:
-            guild = self.bot.get_guild(payload.guild_id)
-            if not guild:
-                return
+        guild = self.bot.get_guild(payload.guild_id)
+        if not guild:
+            return
 
-            role_name = FLAGS[emoji]
+        emoji_str = str(payload.emoji.name)
+        
+        # Buscar la coincidencia del emoji
+        role_name = None
+        for flag_emoji, name in FLAGS.items():
+            if flag_emoji == emoji_str:
+                role_name = name
+                break
+
+        if role_name:
             role = discord.utils.get(guild.roles, name=role_name)
 
-            # Si el rol no existe en el servidor, el bot lo crea
             if not role:
                 try:
                     role = await guild.create_role(name=role_name, mentionable=True)
-                except discord.Forbidden:
-                    print("El bot no tiene permisos para crear roles.")
+                except Exception as e:
+                    print(f"Error creando rol: {e}")
                     return
 
             if role:
@@ -80,30 +86,37 @@ class AutoRoles(commands.Cog):
                 if member:
                     try:
                         await member.add_roles(role)
-                    except discord.Forbidden:
-                        print(f"Sin permisos para asignar el rol {role_name}. Revisa la jerarquía.")
+                        print(f"Rol {role_name} asignado con éxito a {member.name}")
+                    except Exception as e:
+                        print(f"Error al asignar rol: {e}")
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
         if payload.user_id == self.bot.user_id:
             return
 
-        emoji = str(payload.emoji)
-        if emoji in FLAGS:
-            guild = self.bot.get_guild(payload.guild_id)
-            if not guild:
-                return
+        guild = self.bot.get_guild(payload.guild_id)
+        if not guild:
+            return
 
-            role_name = FLAGS[emoji]
+        emoji_str = str(payload.emoji.name)
+        
+        role_name = None
+        for flag_emoji, name in FLAGS.items():
+            if flag_emoji == emoji_str:
+                role_name = name
+                break
+
+        if role_name:
             role = discord.utils.get(guild.roles, name=role_name)
-
             if role:
                 try:
                     member = await guild.fetch_member(payload.user_id)
                     if member:
                         await member.remove_roles(role)
+                        print(f"Rol {role_name} removido de {member.name}")
                 except Exception as e:
-                    print(f"Error quitando rol: {e}")
+                    print(f"Error al remover rol: {e}")
 
 async def setup(bot):
     await bot.add_cog(AutoRoles(bot))
