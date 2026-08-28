@@ -24,7 +24,8 @@ threading.Thread(target=start_web_server, daemon=True).start()
 intents = discord.Intents.default()
 intents.members = True
 intents.bans = True
-intents.reactions = True  # Necesario para los autoroles por reacción
+intents.reactions = True
+intents.message_content = True  # Permite leer el texto del comando !autorol
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
@@ -66,4 +67,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
