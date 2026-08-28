@@ -20,12 +20,12 @@ def start_web_server():
 
 threading.Thread(target=start_web_server, daemon=True).start()
 
-# Configuración del Bot
+# Configuración del Bot con TODOS los Intents activados
 intents = discord.Intents.default()
 intents.members = True
 intents.bans = True
 intents.reactions = True
-intents.message_content = True  # Permite leer el texto del comando !autorol
+intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
@@ -38,7 +38,6 @@ async def on_ready():
 @bot.event
 async def on_member_ban(guild, user):
     canal = await bot.fetch_channel(ID_CANAL_BANEADOS)
-    
     if not canal:
         return
 
@@ -64,7 +63,6 @@ async def main():
     async with bot:
         await bot.load_extension("autoroles")
         await bot.load_extension("info")
-
         await bot.start(os.environ.get("DISCORD_TOKEN"))
 
 if __name__ == "__main__":
