@@ -63,6 +63,8 @@ async def on_member_ban(guild, user):
 async def main():
     async with bot:
         await bot.load_extension("autoroles")
+        await bot.load_extension("info")
+
         await bot.start(os.environ.get("DISCORD_TOKEN"))
 
 if __name__ == "__main__":
