@@ -1,28 +1,28 @@
 import discord
 from discord.ext import commands
 
-# Diccionario con el código del emoji y el nombre base del país
+# Diccionario mapeando la bandera exacta con el nombre del rol a asignar
 FLAGS = {
-    "\U0001F1E8\U0001F1F4": "Colombia 🇨🇴",
-    "\U0001F1F2\U0001F1FD": "México 🇲🇽",
-    "\U0001F1EA\U0001F1F8": "España 🇪🇸",
-    "\U0001F1FB\U0001F1EA": "Venezuela 🇻🇪",
-    "\U0001F1F5\U0001F1F7": "Puerto Rico 🇵🇷",
-    "\U0001F1EA\U0001F1E8": "Ecuador 🇪🇨",
-    "\U0001F1E6\U0001F1F7": "Argentina 🇦🇷",
-    "\U0001F1E8\U0001F1F1": "Chile 🇨🇱",
-    "\U0001F1E7\U0001F1F4": "Bolivia 🇧🇴",
-    "\U0001F1EC\U0001F1F9": "Guatemala 🇬🇹",
-    "\U0001F1F8\U0001F1FB": "El Salvador 🇸🇻",
-    "\U0001F1ED\U0001F1F3": "Honduras 🇭🇳",
-    "\U0001F1F3\U0001F1EE": "Nicaragua 🇳🇮",
-    "\U0001F1E8\U0001F1F7": "Costa Rica 🇨🇷",
-    "\U0001F1F5\U0001F1E6": "Panamá 🇵🇦",
-    "\U0001F1E8\U0001F1FA": "Cuba 🇨🇺",
-    "\U0001F1E9\U0001F1F4": "República Dominicana 🇩🇴",
-    "\U0001F1F5\U0001F1EA": "Perú 🇵🇪",
-    "\U0001F1F5\U0001F1FE": "Paraguay 🇵🇾",
-    "\U0001F1FA\U0001F1FE": "Uruguay 🇺🇾"
+    "🇨🇴": "Colombia",
+    "🇲🇽": "México",
+    "🇪🇸": "España",
+    "🇻🇪": "Venezuela",
+    "🇵🇷": "Puerto Rico",
+    "🇪🇨": "Ecuador",
+    "🇦🇷": "Argentina",
+    "🇨🇱": "Chile",
+    "🇧🇴": "Bolivia",
+    "🇬🇹": "Guatemala",
+    "🇸🇻": "El Salvador",
+    "🇭🇳": "Honduras",
+    "🇳🇮": "Nicaragua",
+    "🇨🇷": "Costa Rica",
+    "🇵🇦": "Panamá",
+    "🇨🇺": "Cuba",
+    "🇩🇴": "República Dominicana",
+    "🇵🇪": "Perú",
+    "🇵🇾": "Paraguay",
+    "🇺🇾": "Uruguay"
 }
 
 class AutoRoles(commands.Cog):
@@ -35,12 +35,12 @@ class AutoRoles(commands.Cog):
         await ctx.message.delete()
 
         embed = discord.Embed(
-            title="🐻 | ¡ELIGE TU PAÍS!",
+            title="👑 │ ¡ELIGE TU PAÍS!",
             description=(
-                "🇨🇴 | **REACCIONA A ESTE MENSAJE CON LA BANDERA DE TU PAÍS**\n\n"
+                "🇨🇴 │ **REACCIONA A ESTE MENSAJE CON LA BANDERA DE TU PAÍS**\n\n"
                 "1. **Solo se puede seleccionar un país.**\n"
-                "2. **Si te equivocas** y tienes que cambiar de país; primero **quita la reacción** y luego **vuelve a reaccionar** al país que deseas.\n"
-                "3. Evita usar todos los emojis y así evitas bugs. Y listo, **disfruta del server con tu nuevo rol.** 🙋‍♂️"
+                "2. **Si te equivocas** y tienes que cambiar de país: primero **quita la reacción** y luego **vuelve a seleccionar**.\n"
+                "3. Evita usar todos los emojis y así evitas bugs. Y listo, **disfruta del server con tu nuevo rol.** 👑"
             ),
             color=discord.Color.red()
         )
@@ -48,11 +48,14 @@ class AutoRoles(commands.Cog):
 
         msg = await ctx.send(embed=embed)
         for emoji in FLAGS.keys():
-            await msg.add_reaction(emoji)
+            try:
+                await msg.add_reaction(emoji)
+            except Exception as e:
+                print(f"Error añadiendo reacción {emoji}: {e}")
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
-        if payload.user_id == self.bot.user.id:
+        if payload.user_id == self.bot.user_id:
             return
 
         emoji = str(payload.emoji)
@@ -62,10 +65,9 @@ class AutoRoles(commands.Cog):
                 return
 
             role_name = FLAGS[emoji]
-            # Busca el rol en el servidor
             role = discord.utils.get(guild.roles, name=role_name)
 
-            # Si el rol no existe, el bot lo crea automáticamente
+            # Si el rol no existe en el servidor, el bot lo crea
             if not role:
                 try:
                     role = await guild.create_role(name=role_name, mentionable=True)
@@ -76,11 +78,14 @@ class AutoRoles(commands.Cog):
             if role:
                 member = payload.member or await guild.fetch_member(payload.user_id)
                 if member:
-                    await member.add_roles(role)
+                    try:
+                        await member.add_roles(role)
+                    except discord.Forbidden:
+                        print(f"Sin permisos para asignar el rol {role_name}. Revisa la jerarquía.")
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
-        if payload.user_id == self.bot.user.id:
+        if payload.user_id == self.bot.user_id:
             return
 
         emoji = str(payload.emoji)
@@ -93,9 +98,12 @@ class AutoRoles(commands.Cog):
             role = discord.utils.get(guild.roles, name=role_name)
 
             if role:
-                member = await guild.fetch_member(payload.user_id)
-                if member:
-                    await member.remove_roles(role)
+                try:
+                    member = await guild.fetch_member(payload.user_id)
+                    if member:
+                        await member.remove_roles(role)
+                except Exception as e:
+                    print(f"Error quitando rol: {e}")
 
 async def setup(bot):
     await bot.add_cog(AutoRoles(bot))
